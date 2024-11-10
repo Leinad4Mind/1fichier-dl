@@ -44,25 +44,27 @@ def get_proxies_from_api(api_url):
 
 def process_proxy_list(proxy_list, proxy_type):
     processed_proxies = []
+    process_inner_proxy = []
     for proxy in list(set(proxy_list)):
         proxy_parts = proxy.split(':')
         proxy_without_country = proxy_parts[0] + ':' + proxy_parts[1]
 
         if proxy.startswith('https://raw.github'):
             raw_proxy_list = requests.get(proxy).text.splitlines()
-            process_inner_proxy = []
+            count = 0
             for item in raw_proxy_list:
+                if item.startswith('socks5://'):
+                    item = item[9:]
+                if item.startswith('http://'):
+                    item = item[7:]
                 process_inner_proxy.append(item)
-            # Remove any possible duplicates
-            unique_proxy_list = list(set(process_inner_proxy))
-            for item in unique_proxy_list:
-                processed_proxies.append({'https': f'{proxy_type}://{item}'})
+                count += 1
+            logging.info('number of proxies loaded from url: '+ str( count))
 
-        elif proxy_without_country.startswith(proxy_type):
-            processed_proxies.append({'https': proxy_without_country})
-        else:
-            processed_proxies.append(
-                {'https': f'{proxy_type}://{proxy_without_country}'})
+    # Remove any possible duplicates
+    unique_proxy_list = list(set(process_inner_proxy))
+    for item in unique_proxy_list:
+        processed_proxies.append({'https': f'{proxy_type}://{item}'})
 
     # Deduplication of proxy servers
     return processed_proxies
@@ -71,11 +73,26 @@ def process_proxy_list(proxy_list, proxy_type):
 def get_all_proxies():
     all_proxies = []
 
-    socks5_proxy_list = get_proxies_from_api(SOCKS5_PROXY_TXT_API)
-    https_proxy_list = get_proxies_from_api(HTTPS_PROXY_TXT_API)
-
+    socks5_proxy_list = get_proxies_from_api(SOCKS5_PROXY_TXT_API)  # fetch list from web, comment this one for only local
+    # socks5_proxy_list = []                                        # uncomment this one for only local
+    f = open( 'socks5_proxy_list.txt', 'r')                         # use local file
+    for line in f:
+        socks5_proxy_list.append(line.rstrip('\r\n'))
+    f.close()
+    logging.info('socks5_proxy_list: '+ str(len( socks5_proxy_list)))
     all_proxies.extend(process_proxy_list(socks5_proxy_list, 'socks5'))
+    logging.info('number of all_proxies available: '+ str( len( all_proxies)))
+    
+    https_proxy_list = get_proxies_from_api(HTTPS_PROXY_TXT_API)    # fetch list from web, comment this one for only local
+    # https_proxy_list = []                                         # uncomment this one for only local
+    f = open( 'https_proxy_list.txt', 'r')                          # use local file
+    for line in f:
+        https_proxy_list.append(line.rstrip('\r\n'))
+    f.close()
+    logging.info('https_proxy_list: '+ str(len(https_proxy_list)))
     all_proxies.extend(process_proxy_list(https_proxy_list, 'http'))
+    logging.info('number of all_proxies available: '+ str(len(all_proxies)))
+
     # Shuffle
     random.shuffle(all_proxies)
     return all_proxies
