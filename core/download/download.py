@@ -106,7 +106,7 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                 return None if not worker.dl_name else worker.dl_name
 
             if (isinstance(worker.data, list)):
-                update_data = [None, None, '우회 성공', None]
+                update_data = [None, None, 'Bypassed', None]
                 worker.signals.update_signal.emit(
                     worker.data, update_data)
 
