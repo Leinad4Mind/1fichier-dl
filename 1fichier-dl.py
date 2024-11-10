@@ -8,7 +8,7 @@ log_level = logging.DEBUG
 if getattr(sys, 'frozen', False):
     # If the script is running as a bundled executable (e.g., PyInstaller)
     log_dir = os.path.join(os.path.dirname(sys.executable), 'app')
-    log_level = logging.INFO
+    # log_level = logging.INFO
 else:
     # If the script is running in a development environment
     log_dir = os.path.join(os.path.dirname(__file__), 'app')

@@ -75,10 +75,15 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
 
         p = worker.proxies.get()
 
+        log_ip = ''
+        log_name = ''
+        log_speed = ''
+
         try:
             if not p:
                 p = worker.proxies.get()
             proxy_ip = str(p['https']) if isinstance(p['https'], str) else ''
+            log_ip = proxy_ip
             if (isinstance(worker.data, list)):
                 update_data = [
                     None, None, f'Bypassing ({i})', str(proxy_ip)] if i != 0 else [
@@ -97,7 +102,7 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                 r = requests.post(url, payload, proxies=p,
                                   timeout=worker.timeout, verify=False)
         except Exception as e:
-            logging.debug('Proxy failed. \n'+f'{e}')
+            logging.debug('Proxy failed. '+f'{e}')
             i += 1
             continue
         else:
@@ -140,6 +145,7 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
 
                 name = f'{name}.unfinished' if name[-11:] != '.unfinished' else name
                 logging.debug(f'Filename: {name}')
+                log_name = name
 
                 worker.dl_name = name
 
@@ -168,6 +174,7 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                         total_per /= float(rx.headers['Content-Length']
                                            ) + downloaded_size
                         dl_speed = download_speed(bytes_read, start)
+                        log_speed = dl_speed
                         if worker.stopped or worker.paused:
                             return name
                         if (isinstance(worker.data, list)):
@@ -177,6 +184,11 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                                 worker.data, update_data)
                 os.rename(worker.dl_directory + '/' + name,
                           worker.dl_directory + '/' + name[:-11])
+
+                logging.info( log_ip+': '+ log_name[:-11]+': '+ log_speed)
+                f = open( 'completed_list.txt', mode='a', encoding='utf-8')
+                f.write( time.asctime( time.localtime())+' '+ log_ip+': '+ log_name[:-11]+': '+ log_speed+'\n')
+                f.close()
 
                 update_data = [None, None, 'Complete', None]
                 if isinstance(worker.data, list):
