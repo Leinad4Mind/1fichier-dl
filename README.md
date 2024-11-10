@@ -124,7 +124,7 @@ python 1fichier-dl.py
 ## 😾 Building Windows exe using PyInstaller
 
 We used `Python v3.11` version to build the `Legacy` project as a Windows program.
-You can also install `requirements.txt` from the project folder and build it directly.
+You can also install `requirements.txt` from the project folder and build it directly. (`pip install -r requirements.txt`)
 
 ```
 pyinstaller --windowed --noconsole --onefile --noconfirm --clean --hiddenimport=_cffi_backend --additional-hooks-dir=. --icon=core/gui/res/ico.ico --paths "[Python_Lib_Path]" --add-data "core/gui/res/*.*;res/" ./1fichier-dl.py
