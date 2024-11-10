@@ -13,7 +13,7 @@ from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QIcon, QStandardItemModel, QPixmap, QFontDatabase, QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QGridLayout,
                              QPushButton, QSpinBox, QWidget, QMessageBox,
-                             QTableView, QHBoxLayout, QDesktopWidget,
+                             QTableView, QHBoxLayout, QHeaderView, # QDesktopWidget,
                              QPlainTextEdit, QVBoxLayout, QAbstractItemView,
                              QAbstractScrollArea, QLabel, QLineEdit,
                              QFileDialog, QProgressBar, QStackedWidget,
@@ -77,14 +77,16 @@ def check_selection(table):
 
 def create_file(f):
     '''
-    Create empty file.
-    [note] Used to create app/settings and app/cache.
+    Create empty file if it does not exist.
     '''
     f = abs_config(f)
-    logging.debug(f'Attempting to create file: {f}...')
-    os.makedirs(os.path.dirname(f), exist_ok=True)
-    f = open(f, 'x')
-    f.close()
+    if not os.path.exists(f):
+        logging.debug(f'Attempting to create file: {f}...')
+        os.makedirs(os.path.dirname(f), exist_ok=True)
+        with open(f, 'x') as file:
+            pass  # Create an empty file
+    else:
+        logging.debug(f'File already exists: {f}')
 
 
 def getClipboardText():
@@ -130,21 +132,17 @@ class GuiBehavior:
         try:
             with open(abs_config('app/settings'), 'rb') as f:
                 self.settings = pickle.load(f)
+                # Set thread count if loaded normally
                 thread_count = self.settings[4]
                 self.download_thread.setMaxThreadCount(int(thread_count))
-                logging.debug('Now Settings Thread Count:'+str(thread_count))
-        except EOFError:
-            self.settings = None
-            logging.debug('No settings found.')
-        except FileNotFoundError:
-            self.settings = None
-            logging.debug('Create New settings File.')
+                logging.debug('Loaded settings thread count:' + str(thread_count))
+        except (FileNotFoundError, EOFError):
+            # If the file does not exist or is empty, use the default settings
+            self.settings = [None, 0, 30, '', 1]  # Initialize to default settings
+            logging.debug('Creating new settings file with default values.')
             create_file('app/settings')
-        except IndexError:
-            # settings Use default value of 3 when there is no fourth element in the list
-            self.settings = None
-            thread_count = 3
-            self.download_thread.setMaxThreadCount(int(thread_count))
+            with open(abs_config('app/settings'), 'wb') as f:
+                pickle.dump(self.settings, f)
 
     def show_loading_overlay(self):
         '''
@@ -324,8 +322,10 @@ class GuiBehavior:
             settings.append(self.gui.proxy_settings_input.text())
 			# Number of multi-downloads
             # Thread Settings     - 4
-            settings.append(1)
-            # settings.append(self.gui.thread_input.value())
+            try:
+                settings.append(self.gui.thread_input.value())
+            except AttributeError:
+                settings.append(1)
             # Select language
             # Lang Settings     - 5
             # settings.append(self.gui.lang_select.currentIndex())
@@ -432,13 +432,11 @@ class Gui:
         ) if not self.settings.isVisible() else self.settings.raise_())
         settings_btn.setFont(self.font)
 
-        # Table
+        # Table initialization code
         self.table = QTableView()
-        headers = ['Name', 'Size', 'Status', 'Proxy server',
-                    'Down Speed', 'Progress', 'Password']
-        self.table.setSizeAdjustPolicy(
-            QAbstractScrollArea.AdjustToContentsOnFirstShow)
-        self.table.horizontalHeader().setStretchLastSection(True)
+        headers = ['Name', 'Size', 'Status', 'Proxy server', 'Down Speed', 'Progress', 'Password']
+        self.table.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContentsOnFirstShow)
+        self.table.horizontalHeader().setStretchLastSection(True)  # Disable last column expansion
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSortingEnabled(True)
         self.table.verticalHeader().hide()
@@ -448,6 +446,16 @@ class Gui:
         self.table_model = QStandardItemModel()
         self.table_model.setHorizontalHeaderLabels(headers)
         self.table.setModel(self.table_model)
+
+        # Set column resizing mode
+        header = self.table.horizontalHeader()
+        # Fix size for specific columns
+        header.setSectionResizeMode(3, QHeaderView.Fixed)  # Fix ‘file name’ column
+        header.resizeSection(3, 250)  # 'Proxy Server' column
+        # Force layout update trigger
+        self.table.horizontalHeader().resizeSections(QHeaderView.Fixed)
+        self.table.viewport().update()
+        self.table.update()
 
         # Append widgets to grid
         grid.addWidget(download_clipboard_btn, 0, 0)
@@ -478,12 +486,12 @@ class Gui:
 
         grid.addLayout(hbox, 2, 0, 1, 3)
         widget.setLayout(grid)
-        self.main.resize(1280, 415)
+        self.main.resize(880, 415)
         # Set size policies for the table
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.table.horizontalHeader().resizeSection(0,self.table.horizontalHeader().sectionSize(0)+400)
-        self.table.horizontalHeader().resizeSection(3,self.table.horizontalHeader().sectionSize(3)+120)
-        self.table.horizontalHeader().resizeSection(2,self.table.horizontalHeader().sectionSize(2)+30)
+        # self.table.horizontalHeader().resizeSection(0,self.table.horizontalHeader().sectionSize(0)+400)
+        # self.table.horizontalHeader().resizeSection(3,self.table.horizontalHeader().sectionSize(3)+120)
+        # self.table.horizontalHeader().resizeSection(2,self.table.horizontalHeader().sectionSize(2)+30)
 
         # Create a loading overlay widget
         self.main.loading_overlay = QWidget(self.main)
@@ -500,10 +508,10 @@ class Gui:
         svg_layout.addWidget(svg_widget)
         svg_layout.setAlignment(Qt.AlignCenter)
 
-        sg = QDesktopWidget().screenGeometry()
-        x = sg.width() - 1280 - 20              # 1280 from self.main.resize()
-        y = sg.height() - 415 - 415 + 20        #  415 from self.main.resize()
-        self.main.move( x, y)
+        # sg = QDesktopWidget().screenGeometry()
+        # x = sg.width() - 1280 - 20              # 1280 from self.main.resize()
+        # y = sg.height() - 415 - 415 + 20        #  415 from self.main.resize()
+        # self.main.move( x, y)
 
         self.main.show()
 
@@ -665,14 +673,14 @@ class Gui:
 
         form_layout_c.addRow(self.proxy_settings_input)
 
-        # form_layout_c.addRow(QLabel('Number of simultaneous proxy downloads (requires restart):'))
-        # self.thread_input = QSpinBox()
-        # if self.actions.settings is not None:
-        #     self.thread_input.setValue(self.actions.settings[4])
-        # else:
-        #     self.thread_input.setValue(3)
+        form_layout_c.addRow(QLabel('Number of simultaneous downloads (requires restart):'))
+        self.thread_input = QSpinBox()
+        if self.actions.settings is not None:
+            self.thread_input.setValue(self.actions.settings[4])
+        else:
+            self.thread_input.setValue(3)
 
-        # form_layout_c.addRow(self.thread_input)
+        form_layout_c.addRow(self.thread_input)
 
         # Bottom buttons
         save_settings_c = QPushButton('Save')
@@ -722,7 +730,10 @@ class Gui:
 
     def add_to_download_list(self):
         # It takes the entered link and converts it into a list.
-        links_text = self.links.toPlainText()
+        if isinstance(self.links, QPlainTextEdit):
+            links_text = self.links.toPlainText()
+        else:
+            links_text = self.links  # If it is already a string
 
         if(links_text) :
             add_links_texts = []

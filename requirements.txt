@@ -2,6 +2,7 @@ lxml==4.9.3
 curl_cffi==0.5.7
 urllib3==2.0.4
 requests
+requests[socks]
 PyQt5
 beautifulsoup4
 pyqtdarktheme

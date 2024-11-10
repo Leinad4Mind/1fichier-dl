@@ -1,5 +1,5 @@
+https://api.proxyscrape.com/v2/?request=displayproxies&protocol=https&timeout=750&country=all
 https://raw.githubusercontent.com/r00tee/Proxy-List/main/Https.txt
-https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks5.txt
 https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/https.txt
 https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/https.txt
 https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/https.txt
