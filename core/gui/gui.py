@@ -13,7 +13,7 @@ from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QIcon, QStandardItemModel, QPixmap, QFontDatabase, QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QGridLayout,
                              QPushButton, QSpinBox, QWidget, QMessageBox,
-                             QTableView, QHBoxLayout,
+                             QTableView, QHBoxLayout, QDesktopWidget,
                              QPlainTextEdit, QVBoxLayout, QAbstractItemView,
                              QAbstractScrollArea, QLabel, QLineEdit,
                              QFileDialog, QProgressBar, QStackedWidget,
@@ -478,9 +478,12 @@ class Gui:
 
         grid.addLayout(hbox, 2, 0, 1, 3)
         widget.setLayout(grid)
-        self.main.resize(730, 415)
+        self.main.resize(1280, 415)
         # Set size policies for the table
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.table.horizontalHeader().resizeSection(0,self.table.horizontalHeader().sectionSize(0)+400)
+        self.table.horizontalHeader().resizeSection(3,self.table.horizontalHeader().sectionSize(3)+120)
+        self.table.horizontalHeader().resizeSection(2,self.table.horizontalHeader().sectionSize(2)+30)
 
         # Create a loading overlay widget
         self.main.loading_overlay = QWidget(self.main)
@@ -496,6 +499,11 @@ class Gui:
         svg_layout = QVBoxLayout(self.main.loading_overlay)
         svg_layout.addWidget(svg_widget)
         svg_layout.setAlignment(Qt.AlignCenter)
+
+        sg = QDesktopWidget().screenGeometry()
+        x = sg.width() - 1280 - 20              # 1280 from self.main.resize()
+        y = sg.height() - 415 - 415 + 20        #  415 from self.main.resize()
+        self.main.move( x, y)
 
         self.main.show()
 
