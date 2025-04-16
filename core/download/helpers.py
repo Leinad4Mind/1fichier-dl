@@ -53,12 +53,11 @@ def process_proxy_list(proxy_list, proxy_type):
             process_inner_proxy = []
             for item in raw_proxy_list:
                 process_inner_proxy.append(item)
-    # Remove any possible duplicates
-    # Deduplication of proxy servers
+            # Remove any possible duplicates
             unique_proxy_list = list(set(process_inner_proxy))
             for item in unique_proxy_list:
                 processed_proxies.append({'https': f'{proxy_type}://{item}'})
-
+        # Deduplication of proxy servers
         elif proxy_without_country.startswith(proxy_type):
             processed_proxies.append({'https': proxy_without_country})
         else:
@@ -70,26 +69,32 @@ def process_proxy_list(proxy_list, proxy_type):
 
 def get_all_proxies():
     all_proxies = []
+    socks5_proxy_list_local = []
+    https_proxy_list = []
 
-    socks5_proxy_list = get_proxies_from_api(SOCKS5_PROXY_TXT_API)  # fetch list from web, comment this one for only local
-    # socks5_proxy_list = []                                        # uncomment this one for only local
-    f = open( 'socks5_proxy_list.txt', 'r')                         # use local file
-    for line in f:
-        socks5_proxy_list.append(line.rstrip('\r\n'))
-    f.close()
+    socks5_proxy_list = get_proxies_from_api(SOCKS5_PROXY_TXT_API)
+    try:
+        with open('socks5_proxy_list.txt', 'r') as f:               # use local file if it exists
+            for line in f:
+                socks5_proxy_list.append(line.strip())
+    except FileNotFoundError:
+        logging.warning('socks5_proxy_list.txt not found. Skipping local socks5 proxies.')
+
     logging.info('socks5_proxy_list: '+ str(len( socks5_proxy_list)))
     all_proxies.extend(process_proxy_list(socks5_proxy_list, 'socks5'))
-    logging.info('number of all_proxies available: '+ str( len( all_proxies)))
-    
-    https_proxy_list = get_proxies_from_api(HTTPS_PROXY_TXT_API)    # fetch list from web, comment this one for only local
-    # https_proxy_list = []                                         # uncomment this one for only local
-    f = open( 'https_proxy_list.txt', 'r')                          # use local file
-    for line in f:
-        https_proxy_list.append(line.rstrip('\r\n'))
-    f.close()
+    logging.info('number of all_proxies available: ' + str(len(all_proxies)))
+
+    https_proxy_list = get_proxies_from_api(HTTPS_PROXY_TXT_API)
+    try:
+        with open('https_proxy_list.txt', 'r') as f:
+            for line in f:
+                https_proxy_list.append(line.strip())
+    except FileNotFoundError:
+        logging.warning('https_proxy_list.txt not found. Skipping local https proxies.')
+
     logging.info('https_proxy_list: '+ str(len(https_proxy_list)))
     all_proxies.extend(process_proxy_list(https_proxy_list, 'http'))
-    logging.info('number of all_proxies available: '+ str(len(all_proxies)))
+    logging.info('number of all_proxies available: ' + str(len(all_proxies)))
 
     # Shuffle
     random.shuffle(all_proxies)
