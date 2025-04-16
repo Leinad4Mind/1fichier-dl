@@ -440,6 +440,7 @@ class Gui:
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSortingEnabled(True)
         self.table.verticalHeader().hide()
+
         if self.font:
             self.table.setFont(self.font)
 

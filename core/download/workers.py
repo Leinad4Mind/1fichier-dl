@@ -151,10 +151,12 @@ class FilterWorker(QRunnable):
                     except Exception as e:
                         logging.error(f"Error processing link {link}: {e}")
                         continue
+                    
         except Exception as e:
             logging.error(f"Unexpected error in run method: {e}")
             # Exit the loading screen even after exception situations
             self.gui.hide_loading_overlay()
+
 
 
 class DownloadWorker(QRunnable):

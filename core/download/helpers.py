@@ -44,29 +44,27 @@ def get_proxies_from_api(api_url):
 
 def process_proxy_list(proxy_list, proxy_type):
     processed_proxies = []
-    process_inner_proxy = []
     for proxy in list(set(proxy_list)):
         proxy_parts = proxy.split(':')
         proxy_without_country = proxy_parts[0] + ':' + proxy_parts[1]
 
         if proxy.startswith('https://raw.github'):
             raw_proxy_list = requests.get(proxy).text.splitlines()
-            count = 0
+            process_inner_proxy = []
             for item in raw_proxy_list:
-                if item.startswith('socks5://'):
-                    item = item[9:]
-                if item.startswith('http://'):
-                    item = item[7:]
                 process_inner_proxy.append(item)
-                count += 1
-            logging.info('number of proxies loaded from url: '+ str( count))
-
     # Remove any possible duplicates
-    unique_proxy_list = list(set(process_inner_proxy))
-    for item in unique_proxy_list:
-        processed_proxies.append({'https': f'{proxy_type}://{item}'})
-
     # Deduplication of proxy servers
+            unique_proxy_list = list(set(process_inner_proxy))
+            for item in unique_proxy_list:
+                processed_proxies.append({'https': f'{proxy_type}://{item}'})
+
+        elif proxy_without_country.startswith(proxy_type):
+            processed_proxies.append({'https': proxy_without_country})
+        else:
+            processed_proxies.append(
+                {'https': f'{proxy_type}://{proxy_without_country}'})
+
     return processed_proxies
 
 

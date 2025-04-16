@@ -102,7 +102,7 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                 r = requests.post(url, payload, proxies=p,
                                   timeout=worker.timeout, verify=False)
         except Exception as e:
-            logging.debug('Proxy failed. '+f'{e}')
+            logging.debug('Proxy failed. \n'+f'{e}')
             i += 1
             continue
         else:
