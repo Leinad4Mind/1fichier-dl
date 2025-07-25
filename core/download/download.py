@@ -182,7 +182,7 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                                 logging.debug("Low download speed detected. Changing proxy.")
                                 break
                         else:
-                            low_speed_duration = 0 
+                            low_speed_duration = 0
 
                         log_speed = dl_speed
                         if worker.stopped or worker.paused:

@@ -361,7 +361,7 @@ class GuiBehavior:
 class Gui:
     def __init__(self):
         # Init GuiBehavior()
-        self.app_name = '1Fichier Downloader v2.1.0'
+        self.app_name = '1Fichier Downloader v2.2.0'
         self.font = None
 
         # Create App
