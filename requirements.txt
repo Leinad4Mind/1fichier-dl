@@ -7,4 +7,4 @@ PyQt5
 beautifulsoup4
 pyqtdarktheme
 pyinstaller==5.13.2
-#pyinstaller==5.13.0 # python -m pip uninstall pyinstalle, python ./waf all --target-arch=64bit
+#pyinstaller==5.13.0 # python -m pip uninstall pyinstaller, python ./waf all --target-arch=64bit

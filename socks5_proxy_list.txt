@@ -1,3 +1,2 @@
 https://raw.githubusercontent.com/r00tee/Proxy-List/main/Socks5.txt
-https://github.com/Zaeem20/FREE_PROXIES_LIST/blob/master/socks5.txt
-https://raw.githubusercontent.com/SevenworksDev/proxy-list/refs/heads/main/proxies/socks5.txt
+https://raw.githubusercontent.com/NikolaiT/free-proxy-list/refs/heads/main/proxies/socks5_working.txt
