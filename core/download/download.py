@@ -174,6 +174,16 @@ def download(worker, payload={'dl_no_ssl': 'on', 'dlinline': 'on'}, downloaded_s
                         total_per /= float(rx.headers['Content-Length']
                                            ) + downloaded_size
                         dl_speed = download_speed(bytes_read, start)
+
+                        if "KB/s" in dl_speed and float(dl_speed.replace("KB/s", "")) <= 70:
+                            low_speed_duration += (time.time() - start)
+                            start = time.time()
+                            if low_speed_duration >= 12:
+                                logging.debug("Low download speed detected. Changing proxy.")
+                                break
+                        else:
+                            low_speed_duration = 0 
+
                         log_speed = dl_speed
                         if worker.stopped or worker.paused:
                             return name
