@@ -50,22 +50,20 @@ def process_proxy_list(proxy_list, proxy_type):
 
         if proxy.startswith('https://raw.github'):
             raw_proxy_list = requests.get(proxy).text.splitlines()
-            process_inner_proxy = []
-            for item in raw_proxy_list:
-                process_inner_proxy.append(item)
-            # Remove any possible duplicates
-            unique_proxy_list = list(set(process_inner_proxy))
+            unique_proxy_list = list(set(raw_proxy_list))
             for item in unique_proxy_list:
-                processed_proxies.append({'https': f'{proxy_type}://{item}'})
-        # Deduplication of proxy servers
+                # Only prepend protocol if not already present
+                if not item.startswith('http://') and not item.startswith('https://'):
+                    item = f'{proxy_type}://{item}'
+                processed_proxies.append({'https': item})
         elif proxy_without_country.startswith(proxy_type):
             processed_proxies.append({'https': proxy_without_country})
         else:
-            processed_proxies.append(
-                {'https': f'{proxy_type}://{proxy_without_country}'})
+            if not proxy_without_country.startswith('http://') and not proxy_without_country.startswith('https://'):
+                proxy_without_country = f'{proxy_type}://{proxy_without_country}'
+            processed_proxies.append({'https': proxy_without_country})
 
     return processed_proxies
-
 
 def get_all_proxies():
     all_proxies = []
@@ -129,22 +127,35 @@ def download_speed(bytes_read: int, start_time: float) -> str:
     return '%s %s' % (s, size_name[i])
 
 
-def get_link_info(url: str) -> list:
+def get_link_info(url: str, retries: int = 3, delay: int = 1) -> list:
     '''
-    Get file name and size. 
+    Get file name and size with basic retry logic on failure.
     '''
-    try:
-        r = requests.get(url)
-        html = lxml.html.fromstring(r.content)
-        if html.xpath('//*[@id="pass"]'):
-            return ['Private File', '- MB']
-        name = html.xpath('//td[@class=\'normal\']')[0].text
-        size = html.xpath('//td[@class=\'normal\']')[2].text
-        r.close()
-        return [name, size]
-    except:
-        logging.debug(__name__+' Exception')
-        return ['Error', '- MB']
+    for attempt in range(retries):
+        try:
+            r = requests.get(url, timeout=10)
+            html = lxml.html.fromstring(r.content)
+
+            # If it's a private file (with a password field)
+            if html.xpath('//*[@id="pass"]'):
+                return ['Private File', '- MB']
+
+            # Fetch the <td> inside the table with class "premium"
+            td = html.xpath('//table[@class="premium"]//td[@class="normal"]')[0]
+            spans = td.xpath('.//span')
+            nome = spans[0].text_content().strip()
+            tamanho = spans[1].text_content().strip()
+            return [nome, tamanho]
+
+        except requests.exceptions.Timeout:
+            logging.warning(f"Timeout on attempt {attempt+1} for {url}")
+            time.sleep(delay)
+        except Exception as e:
+            logging.debug(f"{__name__} Exception: {e}")
+            break
+
+    return ['Error', '- MB']
+
 
 
 def is_valid_link(url: str) -> bool:
