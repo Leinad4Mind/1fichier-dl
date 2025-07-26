@@ -2,10 +2,9 @@ name: Build 1fichier-dl with PyInstaller
 
 on:
   push:
-  #   branches: [ main ]
-  # pull_request:
-  #   branches: [ main ]
-
+    paths:
+      - 'core/version.py'
+      
 jobs:
   build:
     runs-on: ${{ matrix.os }}
