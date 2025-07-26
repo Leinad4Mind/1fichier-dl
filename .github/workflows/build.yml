@@ -57,13 +57,6 @@ jobs:
           [Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           You can download the attached artifacts to test the latest build.
           ⚠️ Build artifacts ARE NOT guaranteed to be IDENTICAL to release assets, as release assets can be modified after they are uploaded.
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload Artifacts
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ steps.get_version.outputs.version }}
-        files: dist/1fichier-dl.exe
+        files: dist/1fichier-dl*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
