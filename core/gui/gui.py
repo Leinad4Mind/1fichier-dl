@@ -20,6 +20,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QGridLayout,
                              QFormLayout, QListWidget, QComboBox, QSizePolicy)
 import tkinter as tk
 proxy_queue = queue.Queue()
+from core.version import __version__
 
 
 def absp(path):
@@ -361,7 +362,8 @@ class GuiBehavior:
 class Gui:
     def __init__(self):
         # Init GuiBehavior()
-        self.app_name = '1Fichier Downloader v2.3.0'
+
+        self.app_name = f'1Fichier Downloader v{__version__}'
         self.font = None
 
         # Create App

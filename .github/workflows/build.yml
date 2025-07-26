@@ -1,0 +1,61 @@
+name: Build 1fichier-dl with PyInstaller
+
+on:
+  push:
+    paths:
+      - 'core/version.py'
+      
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        python-version: [3.10]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller --windowed --noconsole --onefile --noconfirm --clean --hiddenimport=_cffi_backend --additional-hooks-dir=. --icon=core/gui/res/ico.ico --paths "[Python_Lib_Path]" --add-data "core/gui/res/*.*;res/" ./1fichier-dl.py
+      shell: bash
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ runner.os }}-build
+        path: |
+          dist/1fichier-dl*
+
+    - name: Get version 
+      id: get_version
+      run: |
+        VERSION=$(grep '__version__' core/version.py | cut -d'"' -f2)
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.get_version.outputs.version }}
+        name: Release v${{ steps.get_version.outputs.version }}
+        body: |
+          **🤖 This release build was generated automatically by GitHub Actions.**
+          [Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          You can download the attached artifacts to test the latest build.
+          ⚠️ Build artifacts ARE NOT guaranteed to be IDENTICAL to release assets, as release assets can be modified after they are uploaded.
+        files: dist/1fichier-dl*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
